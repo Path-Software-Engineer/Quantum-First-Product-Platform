@@ -1,0 +1,19 @@
+.page { color: #10243c; background: #f5f8fb; }
+.hero { max-width: 1200px; margin: auto; padding: clamp(4rem, 9vw, 8rem) 1.5rem; display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(18rem, .7fr); gap: clamp(2rem, 6vw, 6rem); align-items: end; }
+.heroCopy h1 { max-width: 16ch; font-size: clamp(2.7rem, 5.5vw, 5.4rem); line-height: 1.08; letter-spacing: -.045em; color: #10243c; }
+.eyebrow { text-transform: uppercase; letter-spacing: .16em; font-size: .82rem; font-weight: 700; color: #176d76; }
+.lead { max-width: 63ch; font-size: 1.19rem; line-height: 1.65; color: #35506a; }
+.actions { display: flex; flex-wrap: wrap; gap: .8rem; margin-top: 2rem; }
+.status { border: 1px solid #cad8e4; border-top: 5px solid #176d76; background: #fff; padding: 1.6rem; box-shadow: 0 18px 44px rgba(16,36,60,.08); }
+.status strong { display: block; font-size: 1.45rem; line-height: 1.25; margin: .8rem 0; }
+.status p { color: #35506a; line-height: 1.55; margin-bottom: 0; }
+.statusLabel { font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; font-weight: 700; color: #176d76; }
+.process { max-width: 1200px; margin: auto; padding: 0 1.5rem 6rem; }
+.process h2 { max-width: 24ch; font-size: clamp(2rem, 3vw, 3.2rem); color: #10243c; }
+.stageGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-top: 2rem; }
+.stage { background: #fff; border: 1px solid #cad8e4; padding: 1.7rem; min-height: 13rem; }
+.stage span { color: #176d76; font-weight: 700; }
+.stage h3 { margin: 1.5rem 0 .4rem; color: #10243c; }
+.stage p, .stageNote { color: #35506a; }
+.stageNote { margin-top: 1rem; font-size: .95rem; }
+@media (max-width: 800px) { .hero { grid-template-columns: 1fr; } .stageGrid { grid-template-columns: 1fr; } }

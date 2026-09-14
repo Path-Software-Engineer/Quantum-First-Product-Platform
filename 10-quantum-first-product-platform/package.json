@@ -1,0 +1,13 @@
+{
+  "name": "@paths/quantum-first-product-platform",
+  "version": "0.1.0-dev",
+  "private": true,
+  "workspaces": ["apps/control-api", "apps/portal"],
+  "engines": { "node": ">=24.15.0 <25" },
+  "scripts": {
+    "build": "npm run build -w control-api && npm run build -w portal",
+    "typecheck": "npm run typecheck -w portal && npm run build -w control-api",
+    "test": "npm run test -w control-api",
+    "audit": "npm audit --audit-level=high"
+  }
+}

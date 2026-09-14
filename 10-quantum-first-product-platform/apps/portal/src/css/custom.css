@@ -1,0 +1,22 @@
+:root {
+  --ifm-color-primary: #176d76;
+  --ifm-color-primary-dark: #135e66;
+  --ifm-color-primary-darker: #10545b;
+  --ifm-color-primary-darkest: #0c444a;
+  --ifm-color-primary-light: #1c7d87;
+  --ifm-color-primary-lighter: #238d98;
+  --ifm-color-primary-lightest: #2ca2ad;
+  --ifm-font-family-base: 'Source Sans 3', system-ui, sans-serif;
+  --ifm-heading-font-family: Lexend, system-ui, sans-serif;
+  --ifm-background-color: #f5f8fb;
+  --ifm-font-color-base: #10243c;
+}
+html { scroll-behavior: smooth; }
+:focus-visible { outline: 3px solid #0d7784; outline-offset: 3px; }
+.button { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: background-color .18s ease, border-color .18s ease; }
+.button--primary { background: #176d76; border-color: #176d76; color: #fff; }
+.button--primary:hover { background: #10545b; border-color: #10545b; color: #fff; }
+.button--secondary { border-color: #176d76; color: #125a63; background: #fff; }
+.button--secondary:hover { background: #e5f2f3; color: #0c444a; }
+[data-theme='dark'] { --ifm-background-color: #0d1a2a; --ifm-font-color-base: #e8f2f7; --ifm-color-primary: #76d4da; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .button { transition: none; } }

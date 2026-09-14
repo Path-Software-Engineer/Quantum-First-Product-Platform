@@ -1,5 +1,13 @@
 # 10-quantum-first-product-platform
 
+> **Estado de implementación (2026-09-14):** Sprint 1 iniciado en la rama
+> `feature/s1-d1548-quantum-first-product-exploration`. El [Mapa Actual del
+> Proyecto 10](docs/exploration.md) manda sobre el plan histórico que sigue
+> debajo: exige Docusaurus, NestJS, PostgreSQL, aislamiento multi-tenant,
+> revisión de claims y un one-pager generado. La exploración y los ADR están
+> documentados; el Sprint 1 todavía no está cerrado ni etiquetado. El handoff
+> de AI Project 55 sigue pendiente de aprobación humana y no se ha importado.
+
 ## 🧠 Descripción
 
 **Quantum-First Product Platform** es una plataforma ligera para crear activos de producto, reportes empresariales y documentación developer alrededor de una visión **AI + Quantum**.

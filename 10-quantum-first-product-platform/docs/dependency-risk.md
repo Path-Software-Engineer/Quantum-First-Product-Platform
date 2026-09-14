@@ -15,9 +15,11 @@ The first distinct vulnerable transitive packages are:
 The high count includes parent packages through these dependency chains; it
 does not mean 22 independent defects. `npm view image-size version` returned
 `2.0.2`, so no later published release was available at this check. An npm
-`overrides` attempt for the first two packages did not alter the resolved
-versions in this Windows npm 11 workspace; it was removed rather than left as
-a misleading claim of remediation.
+`overrides` attempts for the first two packages, followed by a lockfile
+regeneration and a targeted `npm update`, did not alter the resolved versions
+in this Windows npm 11 workspace. The overrides were removed rather than left
+as a misleading claim of remediation. A clean dependency-tree diagnostic is
+required before another package-resolution change.
 
 Before a Sprint 1 release: inspect the exact advisory and reachable code path,
 upgrade upstream package releases or test a compatible scoped override/fork,

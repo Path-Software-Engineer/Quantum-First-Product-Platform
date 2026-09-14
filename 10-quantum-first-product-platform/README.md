@@ -5,13 +5,25 @@
 > Proyecto 10](docs/exploration.md) manda sobre el plan histórico que sigue
 > debajo: exige Docusaurus, NestJS, PostgreSQL, aislamiento multi-tenant,
 > revisión de claims y un one-pager generado. La exploración y los ADR están
-> documentados; el lenguaje del producto y un bootstrap local del portal/API
-> están implementados. El Sprint 1 todavía no está cerrado ni etiquetado:
-> faltan tenancy, identidad/RBAC, catálogo, claims, generación del one-pager,
-> PostgreSQL integrado y la aceptación completa. La auditoría de dependencias
+> documentados; el lenguaje del producto, el bootstrap portal/API y la
+> migración inicial de tenancy con pruebas RLS reales están implementados.
+> El Sprint 1 todavía no está cerrado ni etiquetado: faltan identidad/RBAC,
+> catálogo, claims, generación del one-pager, integración de persistencia en
+> la API y la aceptación completa. La auditoría de dependencias
 > tiene vulnerabilidades abiertas (ver [riesgos](docs/dependency-risk.md)). El
 > handoff de AI Project 55 sigue pendiente de aprobación humana y no se ha
 > importado. El Sprint 2 no está abierto.
+
+Verificación local del trabajo disponible:
+
+```powershell
+Set-Location "C:\JeanLoa\Path-Software-Engineer\Quantum-First-Product-Platform\10-quantum-first-product-platform"
+.\scripts\run-quality-gate.ps1
+```
+
+El gate es deliberadamente estricto y se detendrá en `npm audit` mientras
+persistan los hallazgos registrados; los checks anteriores no convierten el
+Sprint 1 en release.
 
 ## 🧠 Descripción
 

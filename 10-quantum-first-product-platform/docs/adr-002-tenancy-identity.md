@@ -1,6 +1,7 @@
 # ADR-002 — tenancy and identity
 
-Status: proposed until migration and negative tests pass.
+Status: persistence/RLS implementation tested locally; identity, RBAC and
+production credential validation remain proposed.
 
 An authenticated actor has memberships scoped to an organization/workspace.
 Every command resolves its workspace from route context and membership, never

@@ -30,3 +30,17 @@ Do not suppress the advisory or lower the audit threshold. The next valid
 options are an upstream Docusaurus/plugin release that accepts the patched
 major, or a reviewed and tested fork/patch of the affected build plugin. Any
 such change must pass the Docusaurus production build and clean-install gate.
+
+## Recheck after the governed publishing slice
+
+The 2026-09-18 full gate reaches only this audit failure after passing the
+clean install, lint, strict types, 17 unit tests, 9 HTTP tests, 11 disposable
+PostgreSQL integration tests and the production portal build. The current
+stable npm tag is still Docusaurus `3.10.2`.
+
+The official `canary` tag (`4.0.0-canary-6818` at this check) moves to
+`css-minimizer-webpack-plugin@^8` and `webpack-dev-server@^6` and no longer
+declares `copy-webpack-plugin` in `@docusaurus/bundler`. It is a pre-release,
+not a stable remediation, so it has not replaced the pinned production stack.
+Previously attempted npm overrides still do not alter the resolved stable
+tree and remain intentionally absent from the repository.

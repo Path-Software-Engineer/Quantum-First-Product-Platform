@@ -268,36 +268,37 @@ export class PublishingRepository {
       );
       const row = version.rows[0];
       if (!row) return null;
-      const [capabilities, useCases, claims, scenarios] = await Promise.all([
-        client.query(
-          `SELECT capability_key AS key, title, description, maturity, limitations, sort_order
-           FROM capabilities WHERE organization_id=$1 AND workspace_id=$2 AND version_id=$3
-           ORDER BY sort_order, capability_key`,
-          [scope.organizationId, scope.workspaceId, versionId],
-        ),
-        client.query(
-          `SELECT use_case_key AS key, actor, problem, workflow, expected_outcome, evidence_status
-           FROM use_cases WHERE organization_id=$1 AND workspace_id=$2 AND version_id=$3
-           ORDER BY use_case_key`,
-          [scope.organizationId, scope.workspaceId, versionId],
-        ),
-        client.query(
-          `SELECT c.claim_id, c.statement, c.owner_subject_id, c.status,
-             e.title AS evidence_title, e.source_uri, e.source_kind, e.notes
-           FROM product_claims c JOIN evidence_references e USING (
-             organization_id, workspace_id, version_id, evidence_id
-           ) WHERE c.organization_id=$1 AND c.workspace_id=$2 AND c.version_id=$3
-             AND c.status='approved' ORDER BY c.created_at, c.claim_id`,
-          [scope.organizationId, scope.workspaceId, versionId],
-        ),
-        client.query(
-          `SELECT scenario_key AS key, packaging, pricing, licensing, assumptions,
-             is_hypothetical FROM commercial_scenarios
-           WHERE organization_id=$1 AND workspace_id=$2 AND version_id=$3
-           ORDER BY scenario_key`,
-          [scope.organizationId, scope.workspaceId, versionId],
-        ),
-      ]);
+      // A pg PoolClient executes one query at a time. Keeping these reads
+      // sequential also preserves a deterministic snapshot inside the tenant
+      // transaction and avoids pg@9's removal of concurrent client.query calls.
+      const capabilities = await client.query(
+        `SELECT capability_key AS key, title, description, maturity, limitations, sort_order
+         FROM capabilities WHERE organization_id=$1 AND workspace_id=$2 AND version_id=$3
+         ORDER BY sort_order, capability_key`,
+        [scope.organizationId, scope.workspaceId, versionId],
+      );
+      const useCases = await client.query(
+        `SELECT use_case_key AS key, actor, problem, workflow, expected_outcome, evidence_status
+         FROM use_cases WHERE organization_id=$1 AND workspace_id=$2 AND version_id=$3
+         ORDER BY use_case_key`,
+        [scope.organizationId, scope.workspaceId, versionId],
+      );
+      const claims = await client.query(
+        `SELECT c.claim_id, c.statement, c.owner_subject_id, c.status,
+           e.title AS evidence_title, e.source_uri, e.source_kind, e.notes
+         FROM product_claims c JOIN evidence_references e USING (
+           organization_id, workspace_id, version_id, evidence_id
+         ) WHERE c.organization_id=$1 AND c.workspace_id=$2 AND c.version_id=$3
+           AND c.status='approved' ORDER BY c.created_at, c.claim_id`,
+        [scope.organizationId, scope.workspaceId, versionId],
+      );
+      const scenarios = await client.query(
+        `SELECT scenario_key AS key, packaging, pricing, licensing, assumptions,
+           is_hypothetical FROM commercial_scenarios
+         WHERE organization_id=$1 AND workspace_id=$2 AND version_id=$3
+         ORDER BY scenario_key`,
+        [scope.organizationId, scope.workspaceId, versionId],
+      );
       const snapshot: OnePagerSnapshot = {
         schemaVersion: 'p10.one-pager.v1',
         product: {

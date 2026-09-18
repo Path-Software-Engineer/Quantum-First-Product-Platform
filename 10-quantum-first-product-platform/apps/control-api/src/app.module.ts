@@ -8,11 +8,26 @@ import { AuthorizationService } from './auth/authorization.service.js';
 import { IdentityService } from './auth/identity.service.js';
 import { MembershipRepository } from './auth/membership.repository.js';
 import { WorkspacePermissionGuard } from './auth/workspace-permission.guard.js';
+import { CatalogController } from './catalog/catalog.controller.js';
+import { CatalogRepository } from './catalog/catalog.repository.js';
+import { CatalogService } from './catalog/catalog.service.js';
 import { DatabaseService } from './database/database.service.js';
+import {
+  PublicOnePagerController,
+  PublishingController,
+} from './publishing/publishing.controller.js';
+import { PublishingRepository } from './publishing/publishing.repository.js';
+import { PublishingService } from './publishing/publishing.service.js';
 
 @Module({
   imports: [],
-  controllers: [AppController, AccessController],
+  controllers: [
+    AppController,
+    AccessController,
+    CatalogController,
+    PublishingController,
+    PublicOnePagerController,
+  ],
   providers: [
     AppService,
     DatabaseService,
@@ -21,6 +36,10 @@ import { DatabaseService } from './database/database.service.js';
     AuthorizationService,
     AuthGuard,
     WorkspacePermissionGuard,
+    CatalogRepository,
+    CatalogService,
+    PublishingRepository,
+    PublishingService,
     { provide: APP_GUARD, useExisting: AuthGuard },
     { provide: APP_GUARD, useExisting: WorkspacePermissionGuard },
   ],

@@ -25,8 +25,9 @@ export class DatabaseService implements OnModuleDestroy {
 
   async query<Row extends QueryResultRow>(
     text: string,
+    values?: unknown[],
   ): Promise<QueryResult<Row>> {
-    return this.getPool().query<Row>(text);
+    return this.getPool().query<Row>(text, values);
   }
 
   async assertRuntimeSecurity(): Promise<void> {

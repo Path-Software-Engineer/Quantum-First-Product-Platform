@@ -5,12 +5,12 @@
 > Proyecto 10](docs/exploration.md) manda sobre el plan histórico que sigue
 > debajo: exige Docusaurus, NestJS, PostgreSQL, aislamiento multi-tenant,
 > revisión de claims y un one-pager generado. La exploración y los ADR están
-> documentados; el lenguaje del producto, el bootstrap portal/API y la
-> migración inicial de tenancy con pruebas RLS reales y la primera capa de
-> identidad/RBAC están implementados. El Sprint 1 todavía no está cerrado ni
-> etiquetado: falta revalidar el recorrido JWT→PostgreSQL cuando Docker esté
-> saludable y completar catálogo, claims, generación del one-pager y la
-> aceptación completa. La auditoría de dependencias
+> documentados. El portal/API, tenancy, identidad/RBAC, catálogo versionado,
+> claims con revisión separada, escenarios comerciales hipotéticos y el
+> one-pager derivado con SHA-256 están implementados. El Sprint 1 todavía no
+> está cerrado ni etiquetado: falta revalidar el recorrido completo contra
+> PostgreSQL cuando Docker esté saludable y obtener la aceptación completa.
+> La auditoría de dependencias
 > tiene vulnerabilidades abiertas (ver [riesgos](docs/dependency-risk.md)). El
 > handoff de AI Project 55 sigue pendiente de aprobación humana y no se ha
 > importado. El Sprint 2 no está abierto.
@@ -25,6 +25,8 @@ Set-Location "C:\JeanLoa\Path-Software-Engineer\Quantum-First-Product-Platform\1
 El gate es deliberadamente estricto y se detendrá en `npm audit` mientras
 persistan los hallazgos registrados; los checks anteriores no convierten el
 Sprint 1 en release.
+
+Contrato del vertical slice: [catálogo y publicación](docs/catalog-publishing.md).
 
 ## 🧠 Descripción
 

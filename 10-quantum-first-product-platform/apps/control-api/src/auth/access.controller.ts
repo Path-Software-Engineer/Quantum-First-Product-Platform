@@ -4,7 +4,7 @@ import { Permission } from './actor.js';
 import type { AuthorizedRequest } from './workspace-permission.guard.js';
 import { WorkspacePermissionGuard } from './workspace-permission.guard.js';
 
-@Controller('v1/workspaces/:workspaceId/access')
+@Controller('api/v1/workspaces/:workspaceId/access')
 export class AccessController {
   @Get()
   @RequirePermission(Permission.CatalogRead)

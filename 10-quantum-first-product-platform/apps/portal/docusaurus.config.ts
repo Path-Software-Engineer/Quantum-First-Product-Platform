@@ -6,6 +6,9 @@ const config: Config = {
   tagline: 'Evidence before claims. Product before hype.',
   url: 'http://127.0.0.1:3000',
   baseUrl: '/',
+  customFields: {
+    apiBaseUrl: process.env.P10_PUBLIC_API_URL ?? 'http://127.0.0.1:8080',
+  },
   onBrokenLinks: 'throw',
   i18n: {defaultLocale: 'en', locales: ['en']},
   presets: [
@@ -22,6 +25,7 @@ const config: Config = {
       items: [
         {to: '/docs/intro', label: 'Platform contract', position: 'left'},
         {to: '/trust', label: 'Trust and evidence', position: 'left'},
+        {to: '/one-pager', label: 'Published one-pager', position: 'left'},
       ],
     },
     footer: {

@@ -5,14 +5,16 @@ sidebar_position: 1
 # Platform contract
 
 This is the Sprint 1 development portal, not a deployed or released product.
-The source of truth for product state will be the NestJS API and PostgreSQL;
-this Docusaurus site will render only accepted, versioned content.
+The source of truth for product state is the NestJS API and PostgreSQL; this
+Docusaurus site renders a public one-pager only from an accepted, versioned
+build identifier.
 
 ## The first vertical slice
 
 An authorized workspace member creates a draft product version, links
 capabilities and use cases, submits claims with provenance, obtains a separate
-review decision and generates an immutable public one-pager. Cross-workspace
+review decision, approves and publishes the version, then generates an
+immutable public one-pager with a source SHA-256. Cross-workspace
 access, self-approval and unsourced claims must fail.
 
 See the [trust and evidence boundary](/trust) before interpreting any future

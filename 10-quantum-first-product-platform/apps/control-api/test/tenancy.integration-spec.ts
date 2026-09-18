@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import { Test } from '@nestjs/testing';
 import type { INestApplication } from '@nestjs/common';
 import { SignJWT } from 'jose';
@@ -23,11 +23,18 @@ integration('PostgreSQL tenancy and RLS under the runtime role', () => {
 
   beforeAll(async () => {
     pool = new Pool({ connectionString: databaseUrl, max: 2 });
-    const migration = await readFile(
-      new URL('../../../infra/migrations/0001_tenancy.sql', import.meta.url),
-      'utf8',
+    const migrationsDirectory = new URL(
+      '../../../infra/migrations/',
+      import.meta.url,
     );
-    await pool.query(migration);
+    const migrations = (await readdir(migrationsDirectory))
+      .filter((name) => name.endsWith('.sql'))
+      .sort();
+    for (const migration of migrations) {
+      await pool.query(
+        await readFile(new URL(migration, migrationsDirectory), 'utf8'),
+      );
+    }
     await pool.query(
       `INSERT INTO organizations (organization_id, slug, display_name)
        VALUES ($1, 'synthetic-a', 'Synthetic A'), ($2, 'synthetic-b', 'Synthetic B')`,
@@ -44,6 +51,7 @@ integration('PostgreSQL tenancy and RLS under the runtime role', () => {
     await pool.query(
       `INSERT INTO memberships (organization_id, workspace_id, subject_id, role)
        VALUES ($1, $2, 'synthetic-actor', 'owner'),
+              ($1, $2, 'synthetic-reviewer', 'reviewer'),
               ($3, $4, 'synthetic-other', 'viewer')`,
       [orgA, workspaceA, orgB, workspaceB],
     );
@@ -157,13 +165,16 @@ integration('PostgreSQL tenancy and RLS under the runtime role', () => {
         'SELECT workspace_id FROM workspaces',
       );
       const memberships = await client.query(
-        'SELECT subject_id FROM memberships',
+        'SELECT subject_id FROM memberships ORDER BY subject_id',
       );
       return { workspaces: workspaces.rows, memberships: memberships.rows };
     });
     expect(rows).toEqual({
       workspaces: [{ workspace_id: workspaceA }],
-      memberships: [{ subject_id: 'synthetic-actor' }],
+      memberships: [
+        { subject_id: 'synthetic-actor' },
+        { subject_id: 'synthetic-reviewer' },
+      ],
     });
   });
 
@@ -254,7 +265,7 @@ integration('PostgreSQL tenancy and RLS under the runtime role', () => {
   it('authorizes an active member through JWT, API guard and PostgreSQL RLS', async () => {
     const token = await accessToken(orgA, 'synthetic-actor');
     await request(app.getHttpServer())
-      .get(`/v1/workspaces/${workspaceA}/access`)
+      .get(`/api/v1/workspaces/${workspaceA}/access`)
       .set('Authorization', `Bearer ${token}`)
       .expect(200)
       .expect(({ body }) => {
@@ -268,6 +279,157 @@ integration('PostgreSQL tenancy and RLS under the runtime role', () => {
       });
   });
 
+  it('creates and reads a versioned catalog through JWT, RBAC and RLS', async () => {
+    const token = await accessToken(orgA, 'synthetic-actor');
+    const reviewerToken = await accessToken(orgA, 'synthetic-reviewer');
+    const productResponse = await request(app.getHttpServer())
+      .post(`/api/v1/workspaces/${workspaceA}/products`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        slug: 'synthetic-product',
+        displayName: 'Synthetic Product',
+        summary: 'Integration-only product evidence.',
+      })
+      .expect(201);
+    const productId = productResponse.body.productId as string;
+    const versionResponse = await request(app.getHttpServer())
+      .post(`/api/v1/workspaces/${workspaceA}/products/${productId}/versions`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ changeSummary: 'Initial synthetic version.' })
+      .expect(201);
+    const versionId = versionResponse.body.versionId as string;
+    await request(app.getHttpServer())
+      .post(
+        `/api/v1/workspaces/${workspaceA}/product-versions/${versionId}/capabilities`,
+      )
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        key: 'bounded-planning',
+        title: 'Bounded planning',
+        description: 'Produces a bounded, inspectable planning result.',
+        maturity: 'hypothesis',
+        limitations: 'No external benchmark evidence has been approved.',
+        sortOrder: 10,
+      })
+      .expect(201);
+    await request(app.getHttpServer())
+      .post(
+        `/api/v1/workspaces/${workspaceA}/product-versions/${versionId}/use-cases`,
+      )
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        key: 'review-product-thesis',
+        actor: 'Product reviewer',
+        problem: 'Claims can become detached from their sources.',
+        workflow: 'Review the versioned claim and its evidence.',
+        expectedOutcome: 'A bounded approval decision.',
+        evidenceStatus: 'hypothesis',
+      })
+      .expect(201);
+    const evidenceResponse = await request(app.getHttpServer())
+      .post(
+        `/api/v1/workspaces/${workspaceA}/product-versions/${versionId}/evidence`,
+      )
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        title: 'Synthetic primary source',
+        sourceUri: 'https://example.invalid/synthetic-evidence',
+        sourceKind: 'primary',
+        notes: 'A non-production reference used to verify provenance wiring.',
+      })
+      .expect(201);
+    const claimResponse = await request(app.getHttpServer())
+      .post(
+        `/api/v1/workspaces/${workspaceA}/product-versions/${versionId}/claims`,
+      )
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        evidenceId: evidenceResponse.body.evidenceId,
+        statement: 'This synthetic version preserves evidence provenance.',
+      })
+      .expect(201);
+    await request(app.getHttpServer())
+      .post(
+        `/api/v1/workspaces/${workspaceA}/product-versions/${versionId}/commercial-scenarios`,
+      )
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        key: 'evaluation-only',
+        packaging: 'A bounded evaluation package.',
+        pricing: 'Hypothetical; no price or billing commitment.',
+        licensing: 'Hypothetical internal evaluation license.',
+        assumptions: 'Requires legal, finance and customer validation.',
+      })
+      .expect(201)
+      .expect(({ body }) => expect(body.isHypothetical).toBe(true));
+    await request(app.getHttpServer())
+      .post(
+        `/api/v1/workspaces/${workspaceA}/product-versions/${versionId}/submit`,
+      )
+      .set('Authorization', `Bearer ${token}`)
+      .expect(201);
+    await request(app.getHttpServer())
+      .post(
+        `/api/v1/workspaces/${workspaceA}/claims/${claimResponse.body.claimId}/review`,
+      )
+      .set('Authorization', `Bearer ${token}`)
+      .send({ decision: 'approved', note: 'Self-review must not be accepted.' })
+      .expect(409);
+    await request(app.getHttpServer())
+      .post(
+        `/api/v1/workspaces/${workspaceA}/claims/${claimResponse.body.claimId}/review`,
+      )
+      .set('Authorization', `Bearer ${reviewerToken}`)
+      .send({
+        decision: 'approved',
+        note: 'Source linkage and wording reviewed.',
+      })
+      .expect(201);
+    await request(app.getHttpServer())
+      .post(
+        `/api/v1/workspaces/${workspaceA}/product-versions/${versionId}/approve`,
+      )
+      .set('Authorization', `Bearer ${reviewerToken}`)
+      .expect(201);
+    await request(app.getHttpServer())
+      .post(
+        `/api/v1/workspaces/${workspaceA}/product-versions/${versionId}/publish`,
+      )
+      .set('Authorization', `Bearer ${reviewerToken}`)
+      .expect(201);
+    const buildResponse = await request(app.getHttpServer())
+      .post(
+        `/api/v1/workspaces/${workspaceA}/product-versions/${versionId}/one-pager-builds`,
+      )
+      .set('Authorization', `Bearer ${reviewerToken}`)
+      .expect(201);
+    expect(buildResponse.body.sourceSha256).toMatch(/^[a-f0-9]{64}$/);
+    expect(buildResponse.body.sourceSnapshot.claims).toHaveLength(1);
+    expect(
+      buildResponse.body.sourceSnapshot.commercialScenarios[0],
+    ).toMatchObject({
+      is_hypothetical: true,
+    });
+    await request(app.getHttpServer())
+      .get(`/api/v1/workspaces/${workspaceA}/products/${productId}`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body.product.productId).toBe(productId);
+        expect(body.versions).toHaveLength(1);
+      });
+    await request(app.getHttpServer())
+      .get(
+        `/api/v1/workspaces/${workspaceA}/product-versions/${versionId}/capabilities`,
+      )
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body).toHaveLength(1);
+        expect(body[0].limitations).toContain('No external benchmark evidence');
+      });
+  });
+
   it('reports ready only for the non-owner runtime role', async () => {
     await request(app.getHttpServer())
       .get('/health/ready')
@@ -278,7 +440,7 @@ integration('PostgreSQL tenancy and RLS under the runtime role', () => {
   it('denies a valid actor attempting to enter another tenant workspace', async () => {
     const token = await accessToken(orgA, 'synthetic-actor');
     await request(app.getHttpServer())
-      .get(`/v1/workspaces/${workspaceB}/access`)
+      .get(`/api/v1/workspaces/${workspaceB}/access`)
       .set('Authorization', `Bearer ${token}`)
       .expect(403)
       .expect(({ body }) =>

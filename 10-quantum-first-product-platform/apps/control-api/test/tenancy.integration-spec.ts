@@ -1,5 +1,10 @@
 import { readFile } from 'node:fs/promises';
+import { Test } from '@nestjs/testing';
+import type { INestApplication } from '@nestjs/common';
+import { SignJWT } from 'jose';
 import { Pool, type PoolClient } from 'pg';
+import request from 'supertest';
+import { AppModule } from '../src/app.module.js';
 
 const databaseUrl = process.env.P10_TEST_DATABASE_URL;
 const integration = databaseUrl ? describe : describe.skip;
@@ -7,9 +12,14 @@ const orgA = '11111111-1111-4111-8111-111111111111';
 const orgB = '22222222-2222-4222-8222-222222222222';
 const workspaceA = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const workspaceB = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+const appPassword = 'synthetic-integration-password';
+const authSecret =
+  'integration-secret-that-is-longer-than-thirty-two-characters';
 
 integration('PostgreSQL tenancy and RLS under the runtime role', () => {
   let pool: Pool;
+  let app: INestApplication;
+  const originalEnvironment = { ...process.env };
 
   beforeAll(async () => {
     pool = new Pool({ connectionString: databaseUrl, max: 2 });
@@ -29,16 +39,49 @@ integration('PostgreSQL tenancy and RLS under the runtime role', () => {
       [orgA, workspaceA, orgB, workspaceB],
     );
     await pool.query(
+      `CREATE ROLE p10_test_app LOGIN PASSWORD '${appPassword}' IN ROLE p10_runtime`,
+    );
+    await pool.query(
       `INSERT INTO memberships (organization_id, workspace_id, subject_id, role)
        VALUES ($1, $2, 'synthetic-actor', 'owner'),
               ($3, $4, 'synthetic-other', 'viewer')`,
       [orgA, workspaceA, orgB, workspaceB],
     );
+
+    const applicationUrl = new URL(databaseUrl!);
+    applicationUrl.username = 'p10_test_app';
+    applicationUrl.password = appPassword;
+    process.env.DATABASE_URL = applicationUrl.toString();
+    process.env.NODE_ENV = 'test';
+    process.env.AUTH_DEVELOPMENT_SECRET = authSecret;
+    process.env.AUTH_ISSUER = 'urn:p10:integration';
+    process.env.AUTH_AUDIENCE = 'urn:p10:control-api';
+    const module = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+    app = module.createNestApplication();
+    await app.init();
   });
 
   afterAll(async () => {
+    await app?.close();
     await pool?.end();
+    process.env = originalEnvironment;
   });
+
+  async function accessToken(
+    organizationId: string,
+    subjectId: string,
+  ): Promise<string> {
+    return new SignJWT({ organization_id: organizationId })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setSubject(subjectId)
+      .setIssuer('urn:p10:integration')
+      .setAudience('urn:p10:control-api')
+      .setIssuedAt()
+      .setExpirationTime('5 minutes')
+      .sign(new TextEncoder().encode(authSecret));
+  }
 
   async function asRuntime<T>(
     organizationId: string | null,
@@ -206,5 +249,40 @@ integration('PostgreSQL tenancy and RLS under the runtime role', () => {
     expect(a).toEqual([{ workspace_id: workspaceA }]);
     expect(b).toEqual([{ workspace_id: workspaceB }]);
     expect(absent).toEqual([]);
+  });
+
+  it('authorizes an active member through JWT, API guard and PostgreSQL RLS', async () => {
+    const token = await accessToken(orgA, 'synthetic-actor');
+    await request(app.getHttpServer())
+      .get(`/v1/workspaces/${workspaceA}/access`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body).toMatchObject({
+          subjectId: 'synthetic-actor',
+          organizationId: orgA,
+          workspaceId: workspaceA,
+          role: 'owner',
+        });
+        expect(body.permissions).toContain('onepager:publish');
+      });
+  });
+
+  it('reports ready only for the non-owner runtime role', async () => {
+    await request(app.getHttpServer())
+      .get('/health/ready')
+      .expect(200)
+      .expect({ status: 'ok', database: 'connected' });
+  });
+
+  it('denies a valid actor attempting to enter another tenant workspace', async () => {
+    const token = await accessToken(orgA, 'synthetic-actor');
+    await request(app.getHttpServer())
+      .get(`/v1/workspaces/${workspaceB}/access`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(403)
+      .expect(({ body }) =>
+        expect(body.message).toBe('Workspace access denied'),
+      );
   });
 });

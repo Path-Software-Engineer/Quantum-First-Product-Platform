@@ -1,28 +1,32 @@
-# Dependency audit status — Sprint 1 bootstrap
+# Dependency audit status — Sprint 1
 
-Checked on 2026-09-14 with `npm audit --json` against the generated npm
-workspace lockfile. The result is **not a passing release gate**: 22 high and
-6 moderate findings. This document records a blocker, not an exception or
-authorization to publish.
+Checked on 2026-09-18 from a newly generated npm lockfile. This remains **a
+release blocker**, not an accepted exception. The final audit result after the
+repairs below is 1 high, 20 moderate and 0 critical findings.
 
-The first distinct vulnerable transitive packages are:
+## Repaired and verified
 
-- `multer@2.2.0`, required by `@nestjs/platform-express@12.0.1`;
-- `serialize-javascript@6.0.2`, required by Docusaurus bundler plugins;
-- `image-size@2.0.2`, required by `@docusaurus/mdx-loader@3.10.2`;
-- `uuid@8.3.2`, in the Docusaurus development server tree.
+- NestJS packages were upgraded from `12.0.1` to `12.0.3`.
+- `@nestjs/platform-express@12.0.3` resolves `multer@2.4.0`; the prior Multer
+  high findings no longer appear.
+- `image-size@2.0.4` is pinned in the portal development toolchain and is
+  deduplicated into `@docusaurus/mdx-loader`; its prior high findings no longer
+  appear.
 
-The high count includes parent packages through these dependency chains; it
-does not mean 22 independent defects. `npm view image-size version` returned
-`2.0.2`, so no later published release was available at this check. An npm
-`overrides` attempts for the first two packages, followed by a lockfile
-regeneration and a targeted `npm update`, did not alter the resolved versions
-in this Windows npm 11 workspace. The overrides were removed rather than left
-as a misleading claim of remediation. A clean dependency-tree diagnostic is
-required before another package-resolution change.
+## Still blocked
 
-Before a Sprint 1 release: inspect the exact advisory and reachable code path,
-upgrade upstream package releases or test a compatible scoped override/fork,
-regenerate the lockfile, run the full build and tests, then obtain a clean
-strict audit. Do not downgrade severity, suppress the finding, or publish an
-unreviewed package substitution solely to turn the gate green.
+`copy-webpack-plugin@11.0.0` and `css-minimizer-webpack-plugin@5.0.1`, brought
+by `@docusaurus/bundler@3.10.2`, resolve `serialize-javascript@6.0.2`. npm audit
+marks that version high and reports no automatic fix. The current Docusaurus
+release remains `3.10.2` at this check.
+
+Both a global and a parent-scoped npm override to `serialize-javascript@7.1.1`
+were tested, including a clean lockfile and `npm ci`. Neither changed the
+resolved lock entry. A direct dependency also produced an invalid dependency
+tree because the build plugins require the `6.x` range. Those unsuccessful
+declarations were removed rather than committed as false remediation.
+
+Do not suppress the advisory or lower the audit threshold. The next valid
+options are an upstream Docusaurus/plugin release that accepts the patched
+major, or a reviewed and tested fork/patch of the affected build plugin. Any
+such change must pass the Docusaurus production build and clean-install gate.

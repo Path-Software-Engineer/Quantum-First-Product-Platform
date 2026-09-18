@@ -6,10 +6,11 @@
 > debajo: exige Docusaurus, NestJS, PostgreSQL, aislamiento multi-tenant,
 > revisión de claims y un one-pager generado. La exploración y los ADR están
 > documentados; el lenguaje del producto, el bootstrap portal/API y la
-> migración inicial de tenancy con pruebas RLS reales están implementados.
-> El Sprint 1 todavía no está cerrado ni etiquetado: faltan identidad/RBAC,
-> catálogo, claims, generación del one-pager, integración de persistencia en
-> la API y la aceptación completa. La auditoría de dependencias
+> migración inicial de tenancy con pruebas RLS reales y la primera capa de
+> identidad/RBAC están implementados. El Sprint 1 todavía no está cerrado ni
+> etiquetado: falta revalidar el recorrido JWT→PostgreSQL cuando Docker esté
+> saludable y completar catálogo, claims, generación del one-pager y la
+> aceptación completa. La auditoría de dependencias
 > tiene vulnerabilidades abiertas (ver [riesgos](docs/dependency-risk.md)). El
 > handoff de AI Project 55 sigue pendiente de aprobación humana y no se ha
 > importado. El Sprint 2 no está abierto.

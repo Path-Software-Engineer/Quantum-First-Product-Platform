@@ -1,7 +1,9 @@
 # ADR-002 — tenancy and identity
 
-Status: persistence/RLS implementation tested locally; identity, RBAC and
-production credential validation remain proposed.
+Status: persistence/RLS and local JWT/RBAC behavior implemented. The remote
+production JWKS path is structurally implemented but remains unverified against
+a selected OIDC provider; the new end-to-end database path awaits a healthy
+Docker Server rerun.
 
 An authenticated actor has memberships scoped to an organization/workspace.
 Every command resolves its workspace from route context and membership, never

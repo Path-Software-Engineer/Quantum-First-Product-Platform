@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.3.1 — Azure recruiter deployment
+
+- Added immutable API, gateway and ephemeral PostgreSQL release images.
+- Added Azure Container Apps Consumption infrastructure with scale 0–1.
+- Reused the existing shared environment and ACR instead of creating another
+  fixed-cost registry or managed database.
+- Added managed-identity ACR pulls, secure runtime credentials and real
+  PostgreSQL RLS readiness checks.
+- Added explicit synthetic public fixtures for one-pager, PQC and developer
+  documentation recruiter journeys.
+
+## 0.3.0 — Sprint 3
+
+- Added reviewed API metadata, endpoint, error, example and quickstart models.
+- Added deterministic Markdown builds, public developer docs and transactional
+  outbox delivery.
+- Added unit, HTTP, PostgreSQL RLS and accessible browser acceptance coverage.
+
 ## 0.2.0 — Sprint 2
 
 - Added tenant-isolated PQC assessments linked to governed product versions.

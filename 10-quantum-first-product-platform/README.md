@@ -1,7 +1,8 @@
 # 10-quantum-first-product-platform
 
-> **Estado de implementación (2026-09-24):** Sprint 3 implementado en la rama
-> `feature/s3-developer-api-docs-builder`. El [Mapa Actual del
+> **Estado de implementación (2026-09-24):** Sprints 1–3 publicados; el
+> release de despliegue Azure 0.3.1 agrega una demo autocontenida para
+> reclutadores. El [Mapa Actual del
 > Proyecto 10](docs/exploration.md) manda sobre el plan histórico que sigue
 > debajo: exige Docusaurus, NestJS, PostgreSQL, aislamiento multi-tenant,
 > revisión de claims y un one-pager generado. La exploración y los ADR están
@@ -38,6 +39,29 @@ sintético y el publisher por consola es solamente un adapter de desarrollo.
 
 Contrato del vertical slice: [catálogo y publicación](docs/catalog-publishing.md).
 Contrato Sprint 3: [developer docs y outbox](docs/sprint-03-developer-docs.md).
+
+## Despliegue Azure
+
+El release usa una sola Azure Container App en el entorno Consumption ya
+existente, con `minReplicas=0` y `maxReplicas=1`. Portal, API y PostgreSQL se
+ejecutan como contenedores de una misma revisión. PostgreSQL conserva las
+políticas RLS reales, pero su almacenamiento es efímero: después de escalar a
+cero, las migraciones y las proyecciones públicas sintéticas se recrean.
+
+No se crea ACR, Log Analytics, Azure Files ni base administrada. Se reutiliza
+el ACR Standard del Proyecto 7, que ya es facturable; este diseño evita otro
+costo fijo, pero no promete una factura absoluta de cero.
+
+Preflight sin publicar imágenes ni crear recursos:
+
+```powershell
+Set-Location "C:\JeanLoa\Path-Software-Engineer\Quantum-First-Product-Platform\10-quantum-first-product-platform"
+.\scripts\deploy-azure.ps1
+```
+
+El modo `-Apply` exige el tag exacto `v0.3.1-azure-deployment`, vuelve a correr
+el quality gate, publica imágenes inmutables y verifica portal, readiness,
+Swagger, OpenAPI y las tres proyecciones públicas reales.
 
 ## 🧠 Descripción
 

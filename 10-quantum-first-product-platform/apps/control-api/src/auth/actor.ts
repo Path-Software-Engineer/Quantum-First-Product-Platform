@@ -17,6 +17,10 @@ export enum Permission {
   PqcWrite = 'pqc:write',
   PqcReview = 'pqc:review',
   PqcPublish = 'pqc:publish',
+  DeveloperDocsRead = 'developer-docs:read',
+  DeveloperDocsWrite = 'developer-docs:write',
+  DeveloperDocsReview = 'developer-docs:review',
+  DeveloperDocsPublish = 'developer-docs:publish',
 }
 
 export const rolePermissions: Readonly<Record<Role, readonly Permission[]>> = {
@@ -27,6 +31,8 @@ export const rolePermissions: Readonly<Record<Role, readonly Permission[]>> = {
     Permission.ClaimSubmit,
     Permission.PqcRead,
     Permission.PqcWrite,
+    Permission.DeveloperDocsRead,
+    Permission.DeveloperDocsWrite,
   ],
   reviewer: [
     Permission.CatalogRead,
@@ -35,8 +41,15 @@ export const rolePermissions: Readonly<Record<Role, readonly Permission[]>> = {
     Permission.PqcRead,
     Permission.PqcReview,
     Permission.PqcPublish,
+    Permission.DeveloperDocsRead,
+    Permission.DeveloperDocsReview,
+    Permission.DeveloperDocsPublish,
   ],
-  viewer: [Permission.CatalogRead, Permission.PqcRead],
+  viewer: [
+    Permission.CatalogRead,
+    Permission.PqcRead,
+    Permission.DeveloperDocsRead,
+  ],
 };
 
 export function isRole(value: string): value is Role {

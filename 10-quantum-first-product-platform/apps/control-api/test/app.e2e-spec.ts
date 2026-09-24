@@ -111,6 +111,9 @@ describe('AppController (e2e)', () => {
         expect(
           body.paths['/api/v1/public/pqc-reports/{buildId}'],
         ).toBeDefined();
+        expect(
+          body.paths['/api/v1/public/developer-docs/{buildId}'],
+        ).toBeDefined();
       });
   });
 

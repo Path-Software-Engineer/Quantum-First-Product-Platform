@@ -1,7 +1,7 @@
 # 10-quantum-first-product-platform
 
-> **Estado de implementación (2026-09-24):** Sprint 2 implementado en la rama
-> `feature/s2-pqc-product-report`. El [Mapa Actual del
+> **Estado de implementación (2026-09-24):** Sprint 3 implementado en la rama
+> `feature/s3-developer-api-docs-builder`. El [Mapa Actual del
 > Proyecto 10](docs/exploration.md) manda sobre el plan histórico que sigue
 > debajo: exige Docusaurus, NestJS, PostgreSQL, aislamiento multi-tenant,
 > revisión de claims y un one-pager generado. La exploración y los ADR están
@@ -31,7 +31,13 @@ Si Chromium de Playwright aún no está instalado, ejecute primero
 `.\scripts\setup.ps1`. El gate es deliberadamente estricto y valida también el
 navegador real, accesibilidad, PostgreSQL desechable y auditoría de dependencias.
 
+Sprint 3 implementa metadata y contratos API, errores, ejemplos curl/Python,
+quickstart, revisión independiente, Markdown reproducible, visor público y
+outbox transaccional con worker tenant-scoped. El contenido de aceptación es
+sintético y el publisher por consola es solamente un adapter de desarrollo.
+
 Contrato del vertical slice: [catálogo y publicación](docs/catalog-publishing.md).
+Contrato Sprint 3: [developer docs y outbox](docs/sprint-03-developer-docs.md).
 
 ## 🧠 Descripción
 

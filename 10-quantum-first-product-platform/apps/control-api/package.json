@@ -1,6 +1,6 @@
 {
   "name": "control-api",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "",
   "author": "",
   "private": true,
@@ -13,6 +13,7 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
+    "worker:once": "node dist/worker",
     "lint": "oxlint src/ test/",
     "test": "vitest run",
     "test:watch": "vitest",

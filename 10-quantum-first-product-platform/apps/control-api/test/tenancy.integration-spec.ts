@@ -437,6 +437,145 @@ integration('PostgreSQL tenancy and RLS under the runtime role', () => {
       .expect({ status: 'ok', database: 'connected' });
   });
 
+  it('builds and publishes a reviewed, explainable PQC report', async () => {
+    const authorToken = await accessToken(orgA, 'synthetic-actor');
+    const reviewerToken = await accessToken(orgA, 'synthetic-reviewer');
+    const product = await request(app.getHttpServer())
+      .post(`/api/v1/workspaces/${workspaceA}/products`)
+      .set('Authorization', `Bearer ${authorToken}`)
+      .send({
+        slug: 'synthetic-pqc-report',
+        displayName: 'Synthetic PQC Report',
+        summary: 'Integration fixture; not a customer assessment.',
+      })
+      .expect(201);
+    const version = await request(app.getHttpServer())
+      .post(
+        `/api/v1/workspaces/${workspaceA}/products/${product.body.productId}/versions`,
+      )
+      .set('Authorization', `Bearer ${authorToken}`)
+      .send({ changeSummary: 'Synthetic Sprint 2 integration fixture.' })
+      .expect(201);
+    const assessment = await request(app.getHttpServer())
+      .post(
+        `/api/v1/workspaces/${workspaceA}/product-versions/${version.body.versionId}/pqc-assessments`,
+      )
+      .set('Authorization', `Bearer ${authorToken}`)
+      .send({
+        title: 'Synthetic readiness assessment',
+        industry: 'Synthetic financial services',
+        criticalSystems: 'Declared identity gateway',
+        sensitiveData: 'Declared long-lived records',
+        maturity: 'initial',
+        primaryConcern: 'Prioritize cryptographic discovery',
+        scope: 'User-declared integration fixture only',
+        assumptions: 'No active scanner or production access',
+        evidenceBasis: 'self_reported',
+      })
+      .expect(201);
+    const assessmentId = assessment.body.assessmentId;
+    const inventory = await request(app.getHttpServer())
+      .post(
+        `/api/v1/workspaces/${workspaceA}/pqc-assessments/${assessmentId}/inventory`,
+      )
+      .set('Authorization', `Bearer ${authorToken}`)
+      .send({
+        systemName: 'Synthetic identity gateway',
+        algorithm: 'RSA',
+        protocol: 'TLS',
+        dataClass: 'Synthetic long-lived records',
+        criticality: 'high',
+        exposure: 'internet',
+        retention: 'long',
+        cryptoAgility: 'low',
+        evidenceNote:
+          'Self-reported integration fixture; not independently discovered.',
+      })
+      .expect(201);
+    expect(inventory.body).toMatchObject({ riskScore: 12, riskTier: 'high' });
+    await request(app.getHttpServer())
+      .post(
+        `/api/v1/workspaces/${workspaceA}/pqc-assessments/${assessmentId}/recommendations`,
+      )
+      .set('Authorization', `Bearer ${authorToken}`)
+      .send({
+        itemId: inventory.body.itemId,
+        action:
+          'Validate the declared dependency and establish a crypto-agility owner.',
+        priority: 'high',
+        dependency: 'System owner and protocol inventory',
+        limitation:
+          'Algorithm migration is not selected by this planning report.',
+      })
+      .expect(201);
+    for (const phaseNumber of [1, 2, 3, 4, 5]) {
+      await request(app.getHttpServer())
+        .post(
+          `/api/v1/workspaces/${workspaceA}/pqc-assessments/${assessmentId}/roadmap`,
+        )
+        .set('Authorization', `Bearer ${authorToken}`)
+        .send({
+          phaseNumber,
+          title: `Synthetic phase ${phaseNumber}`,
+          objective: 'Advance one bounded readiness step.',
+          exitCriteria: 'Reviewer-verifiable evidence exists.',
+          operationalRisks:
+            'Change windows and dependencies require validation.',
+        })
+        .expect(201);
+    }
+    await request(app.getHttpServer())
+      .post(
+        `/api/v1/workspaces/${workspaceA}/pqc-assessments/${assessmentId}/review`,
+      )
+      .set('Authorization', `Bearer ${authorToken}`)
+      .send({ note: 'Self-review is forbidden.' })
+      .expect(409);
+    await request(app.getHttpServer())
+      .post(
+        `/api/v1/workspaces/${workspaceA}/pqc-assessments/${assessmentId}/review`,
+      )
+      .set('Authorization', `Bearer ${reviewerToken}`)
+      .send({
+        note: 'Evidence boundary, scoring rubric and limitations reviewed.',
+      })
+      .expect(201);
+    const build = await request(app.getHttpServer())
+      .post(
+        `/api/v1/workspaces/${workspaceA}/pqc-assessments/${assessmentId}/report-builds`,
+      )
+      .set('Authorization', `Bearer ${reviewerToken}`)
+      .expect(201);
+    expect(build.body.sourceSha256).toMatch(/^[a-f0-9]{64}$/);
+    expect(build.body.sourceSnapshot).toMatchObject({
+      schemaVersion: 'p10.pqc-report.v1',
+      executiveSummary: { highPriorityItems: 1, highestTier: 'high' },
+    });
+    expect(JSON.stringify(build.body.sourceSnapshot)).not.toContain(
+      'synthetic-reviewer',
+    );
+    await request(app.getHttpServer())
+      .post(
+        `/api/v1/workspaces/${workspaceA}/pqc-report-builds/${build.body.buildId}/publish`,
+      )
+      .set('Authorization', `Bearer ${reviewerToken}`)
+      .expect(201);
+    await request(app.getHttpServer())
+      .get(`/api/v1/public/pqc-reports/${build.body.buildId}`)
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body.sourceSnapshot.inventory).toHaveLength(1);
+        expect(body.sourceSnapshot.roadmap).toHaveLength(5);
+        expect(body.sourceSnapshot.disclaimer).toContain('not an audit');
+      });
+    const hiddenFromOtherTenant = await asRuntime(orgB, (client) =>
+      client.query('SELECT build_id FROM pqc_report_builds WHERE build_id=$1', [
+        build.body.buildId,
+      ]),
+    );
+    expect(hiddenFromOtherTenant.rows).toEqual([]);
+  });
+
   it('denies a valid actor attempting to enter another tenant workspace', async () => {
     const token = await accessToken(orgA, 'synthetic-actor');
     await request(app.getHttpServer())

@@ -108,6 +108,9 @@ describe('AppController (e2e)', () => {
       .expect(({ body }) => {
         expect(body.openapi).toBe('3.0.3');
         expect(body.paths['/api/v1/public/one-pagers/{buildId}']).toBeDefined();
+        expect(
+          body.paths['/api/v1/public/pqc-reports/{buildId}'],
+        ).toBeDefined();
       });
   });
 

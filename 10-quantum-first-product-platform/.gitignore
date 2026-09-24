@@ -1,0 +1,16 @@
+node_modules/
+apps/*/node_modules/
+apps/portal/.docusaurus/
+apps/portal/build/
+apps/control-api/dist/
+apps/control-api/coverage/
+apps/control-api/*.tsbuildinfo
+.env
+.env.*
+!.env.example
+playwright-report/
+test-results/
+# Unused assets from the Docusaurus generator; never release template branding.
+apps/portal/static/img/
+apps/portal/docs/tutorial-extras/img/
+apps/portal/blog/2021-08-26-welcome/

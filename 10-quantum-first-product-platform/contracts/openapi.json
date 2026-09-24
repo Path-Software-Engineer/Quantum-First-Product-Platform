@@ -1,0 +1,110 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Quantum-First Product Platform Control API",
+    "version": "0.1.0",
+    "description": "Sprint 1 contract for tenant-scoped product catalog, governed claims and immutable one-pager builds."
+  },
+  "servers": [{ "url": "http://127.0.0.1:8080" }],
+  "tags": [
+    { "name": "Health" },
+    { "name": "Access" },
+    { "name": "Catalog" },
+    { "name": "Publishing" },
+    { "name": "Public artifacts" }
+  ],
+  "paths": {
+    "/health/live": {
+      "get": { "tags": ["Health"], "operationId": "getLiveness", "security": [], "responses": { "200": { "description": "Process is live" } } }
+    },
+    "/health/ready": {
+      "get": { "tags": ["Health"], "operationId": "getReadiness", "security": [], "responses": { "200": { "description": "Runtime database role is ready" }, "503": { "$ref": "#/components/responses/Unavailable" } } }
+    },
+    "/api/v1/workspaces/{workspaceId}/access": {
+      "get": { "tags": ["Access"], "operationId": "getWorkspaceAccess", "parameters": [{ "$ref": "#/components/parameters/WorkspaceId" }], "responses": { "200": { "description": "Effective role and permissions" }, "403": { "$ref": "#/components/responses/Forbidden" } } }
+    },
+    "/api/v1/workspaces/{workspaceId}/products": {
+      "get": { "tags": ["Catalog"], "operationId": "listProducts", "parameters": [{ "$ref": "#/components/parameters/WorkspaceId" }], "responses": { "200": { "description": "Workspace products", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Product" } } } } } } },
+      "post": { "tags": ["Catalog"], "operationId": "createProduct", "parameters": [{ "$ref": "#/components/parameters/WorkspaceId" }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateProduct" } } } }, "responses": { "201": { "description": "Created product", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Product" } } } }, "409": { "$ref": "#/components/responses/Conflict" } } }
+    },
+    "/api/v1/workspaces/{workspaceId}/products/{productId}": {
+      "get": { "tags": ["Catalog"], "operationId": "getProduct", "parameters": [{ "$ref": "#/components/parameters/WorkspaceId" }, { "$ref": "#/components/parameters/ProductId" }], "responses": { "200": { "description": "Product and its versions" }, "404": { "$ref": "#/components/responses/NotFound" } } }
+    },
+    "/api/v1/workspaces/{workspaceId}/products/{productId}/versions": {
+      "post": { "tags": ["Catalog"], "operationId": "createProductVersion", "parameters": [{ "$ref": "#/components/parameters/WorkspaceId" }, { "$ref": "#/components/parameters/ProductId" }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateVersion" } } } }, "responses": { "201": { "description": "Created draft version" }, "404": { "$ref": "#/components/responses/NotFound" } } }
+    },
+    "/api/v1/workspaces/{workspaceId}/product-versions/{versionId}/capabilities": {
+      "get": { "tags": ["Catalog"], "operationId": "listCapabilities", "parameters": [{ "$ref": "#/components/parameters/WorkspaceId" }, { "$ref": "#/components/parameters/VersionId" }], "responses": { "200": { "description": "Version capabilities" }, "404": { "$ref": "#/components/responses/NotFound" } } },
+      "post": { "tags": ["Catalog"], "operationId": "createCapability", "parameters": [{ "$ref": "#/components/parameters/WorkspaceId" }, { "$ref": "#/components/parameters/VersionId" }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateCapability" } } } }, "responses": { "201": { "description": "Created capability" }, "409": { "$ref": "#/components/responses/Conflict" } } }
+    },
+    "/api/v1/workspaces/{workspaceId}/product-versions/{versionId}/use-cases": {
+      "get": { "tags": ["Catalog"], "operationId": "listUseCases", "parameters": [{ "$ref": "#/components/parameters/WorkspaceId" }, { "$ref": "#/components/parameters/VersionId" }], "responses": { "200": { "description": "Version use cases" } } },
+      "post": { "tags": ["Catalog"], "operationId": "createUseCase", "parameters": [{ "$ref": "#/components/parameters/WorkspaceId" }, { "$ref": "#/components/parameters/VersionId" }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateUseCase" } } } }, "responses": { "201": { "description": "Created use case" }, "409": { "$ref": "#/components/responses/Conflict" } } }
+    },
+    "/api/v1/workspaces/{workspaceId}/product-versions/{versionId}/evidence": {
+      "post": { "tags": ["Publishing"], "operationId": "createEvidence", "parameters": [{ "$ref": "#/components/parameters/WorkspaceId" }, { "$ref": "#/components/parameters/VersionId" }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateEvidence" } } } }, "responses": { "201": { "description": "Created evidence reference" }, "409": { "$ref": "#/components/responses/Conflict" } } }
+    },
+    "/api/v1/workspaces/{workspaceId}/product-versions/{versionId}/claims": {
+      "get": { "tags": ["Publishing"], "operationId": "listClaims", "parameters": [{ "$ref": "#/components/parameters/WorkspaceId" }, { "$ref": "#/components/parameters/VersionId" }], "responses": { "200": { "description": "Version claims" } } },
+      "post": { "tags": ["Publishing"], "operationId": "createClaim", "parameters": [{ "$ref": "#/components/parameters/WorkspaceId" }, { "$ref": "#/components/parameters/VersionId" }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateClaim" } } } }, "responses": { "201": { "description": "Created owned claim" }, "409": { "$ref": "#/components/responses/Conflict" } } }
+    },
+    "/api/v1/workspaces/{workspaceId}/product-versions/{versionId}/commercial-scenarios": {
+      "post": { "tags": ["Publishing"], "operationId": "createCommercialScenario", "parameters": [{ "$ref": "#/components/parameters/WorkspaceId" }, { "$ref": "#/components/parameters/VersionId" }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateCommercialScenario" } } } }, "responses": { "201": { "description": "Created explicitly hypothetical scenario" } } }
+    },
+    "/api/v1/workspaces/{workspaceId}/product-versions/{versionId}/submit": {
+      "post": { "tags": ["Publishing"], "operationId": "submitProductVersion", "parameters": [{ "$ref": "#/components/parameters/WorkspaceId" }, { "$ref": "#/components/parameters/VersionId" }], "responses": { "201": { "description": "Version submitted for independent review" }, "409": { "$ref": "#/components/responses/Conflict" } } }
+    },
+    "/api/v1/workspaces/{workspaceId}/claims/{claimId}/review": {
+      "post": { "tags": ["Publishing"], "operationId": "reviewClaim", "parameters": [{ "$ref": "#/components/parameters/WorkspaceId" }, { "$ref": "#/components/parameters/ClaimId" }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ReviewClaim" } } } }, "responses": { "201": { "description": "Independent review recorded" }, "409": { "$ref": "#/components/responses/Conflict" } } }
+    },
+    "/api/v1/workspaces/{workspaceId}/product-versions/{versionId}/approve": {
+      "post": { "tags": ["Publishing"], "operationId": "approveProductVersion", "parameters": [{ "$ref": "#/components/parameters/WorkspaceId" }, { "$ref": "#/components/parameters/VersionId" }], "responses": { "201": { "description": "Version approved after policy checks" }, "409": { "$ref": "#/components/responses/Conflict" } } }
+    },
+    "/api/v1/workspaces/{workspaceId}/product-versions/{versionId}/publish": {
+      "post": { "tags": ["Publishing"], "operationId": "publishProductVersion", "parameters": [{ "$ref": "#/components/parameters/WorkspaceId" }, { "$ref": "#/components/parameters/VersionId" }], "responses": { "201": { "description": "Approved version published" }, "409": { "$ref": "#/components/responses/Conflict" } } }
+    },
+    "/api/v1/workspaces/{workspaceId}/product-versions/{versionId}/one-pager-builds": {
+      "post": { "tags": ["Publishing"], "operationId": "buildOnePager", "parameters": [{ "$ref": "#/components/parameters/WorkspaceId" }, { "$ref": "#/components/parameters/VersionId" }], "responses": { "201": { "description": "Immutable one-pager build with SHA-256", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OnePagerBuild" } } } }, "409": { "$ref": "#/components/responses/Conflict" } } }
+    },
+    "/api/v1/workspaces/{workspaceId}/one-pager-builds/{buildId}": {
+      "get": { "tags": ["Publishing"], "operationId": "getPrivateOnePagerBuild", "parameters": [{ "$ref": "#/components/parameters/WorkspaceId" }, { "$ref": "#/components/parameters/BuildId" }], "responses": { "200": { "description": "Tenant-owned one-pager build", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OnePagerBuild" } } } }, "404": { "$ref": "#/components/responses/NotFound" } } }
+    },
+    "/api/v1/workspaces/{workspaceId}/audit-events": {
+      "get": { "tags": ["Publishing"], "operationId": "listAuditEvents", "parameters": [{ "$ref": "#/components/parameters/WorkspaceId" }], "responses": { "200": { "description": "Latest governed workspace events" } } }
+    },
+    "/api/v1/public/one-pagers/{buildId}": {
+      "get": { "tags": ["Public artifacts"], "operationId": "getPublishedOnePager", "security": [], "parameters": [{ "$ref": "#/components/parameters/BuildId" }], "responses": { "200": { "description": "Published projection without tenant or actor identifiers", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PublicOnePager" } } } }, "404": { "$ref": "#/components/responses/NotFound" } } }
+    }
+  },
+  "components": {
+    "securitySchemes": { "bearerAuth": { "type": "http", "scheme": "bearer", "bearerFormat": "JWT" } },
+    "parameters": {
+      "WorkspaceId": { "name": "workspaceId", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/Uuid" } },
+      "ProductId": { "name": "productId", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/Uuid" } },
+      "VersionId": { "name": "versionId", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/Uuid" } },
+      "ClaimId": { "name": "claimId", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/Uuid" } },
+      "BuildId": { "name": "buildId", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/Uuid" } }
+    },
+    "responses": {
+      "Forbidden": { "description": "Workspace membership or permission denied" },
+      "NotFound": { "description": "Resource not found in the authorized scope" },
+      "Conflict": { "description": "Lifecycle or evidence policy rejected the operation" },
+      "Unavailable": { "description": "Required runtime dependency unavailable" }
+    },
+    "schemas": {
+      "Uuid": { "type": "string", "format": "uuid" },
+      "Product": { "type": "object", "required": ["productId", "slug", "displayName", "summary", "createdBy", "createdAt"], "properties": { "productId": { "$ref": "#/components/schemas/Uuid" }, "slug": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" }, "displayName": { "type": "string" }, "summary": { "type": "string" }, "createdBy": { "type": "string" }, "createdAt": { "type": "string", "format": "date-time" } } },
+      "CreateProduct": { "type": "object", "additionalProperties": false, "required": ["slug", "displayName", "summary"], "properties": { "slug": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" }, "displayName": { "type": "string", "maxLength": 160 }, "summary": { "type": "string", "maxLength": 2000 } } },
+      "CreateVersion": { "type": "object", "additionalProperties": false, "required": ["changeSummary"], "properties": { "changeSummary": { "type": "string", "maxLength": 1000 } } },
+      "CreateCapability": { "type": "object", "additionalProperties": false, "required": ["key", "title", "description", "maturity", "limitations"], "properties": { "key": { "type": "string" }, "title": { "type": "string" }, "description": { "type": "string" }, "maturity": { "type": "string", "enum": ["hypothesis", "planned", "available", "retired"] }, "limitations": { "type": "string" }, "sortOrder": { "type": "integer", "minimum": 0, "default": 0 } } },
+      "CreateUseCase": { "type": "object", "additionalProperties": false, "required": ["key", "actor", "problem", "workflow", "expectedOutcome", "evidenceStatus"], "properties": { "key": { "type": "string" }, "actor": { "type": "string" }, "problem": { "type": "string" }, "workflow": { "type": "string" }, "expectedOutcome": { "type": "string" }, "evidenceStatus": { "type": "string", "enum": ["hypothesis", "sourced"] } } },
+      "CreateEvidence": { "type": "object", "additionalProperties": false, "required": ["title", "sourceUri", "sourceKind", "notes"], "properties": { "title": { "type": "string" }, "sourceUri": { "type": "string", "format": "uri", "pattern": "^https?://" }, "sourceKind": { "type": "string", "enum": ["primary", "standard", "internal"] }, "notes": { "type": "string" } } },
+      "CreateClaim": { "type": "object", "additionalProperties": false, "required": ["evidenceId", "statement"], "properties": { "evidenceId": { "$ref": "#/components/schemas/Uuid" }, "statement": { "type": "string", "maxLength": 2000 } } },
+      "ReviewClaim": { "type": "object", "additionalProperties": false, "required": ["decision", "note"], "properties": { "decision": { "type": "string", "enum": ["approved", "rejected"] }, "note": { "type": "string", "maxLength": 2000 } } },
+      "CreateCommercialScenario": { "type": "object", "additionalProperties": false, "required": ["key", "packaging", "pricing", "licensing", "assumptions"], "properties": { "key": { "type": "string" }, "packaging": { "type": "string" }, "pricing": { "type": "string", "description": "Explicitly hypothetical; never an executable quote." }, "licensing": { "type": "string", "description": "Explicitly hypothetical; never executable license terms." }, "assumptions": { "type": "string" } } },
+      "OnePagerBuild": { "type": "object", "required": ["buildId", "versionId", "sourceSnapshot", "sourceSha256", "createdBy", "createdAt"], "properties": { "buildId": { "$ref": "#/components/schemas/Uuid" }, "versionId": { "$ref": "#/components/schemas/Uuid" }, "sourceSnapshot": { "type": "object" }, "sourceSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }, "createdBy": { "type": "string" }, "createdAt": { "type": "string", "format": "date-time" } } },
+      "PublicOnePager": { "type": "object", "required": ["buildId", "sourceSnapshot", "sourceSha256", "publishedAt"], "properties": { "buildId": { "$ref": "#/components/schemas/Uuid" }, "sourceSnapshot": { "type": "object" }, "sourceSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }, "publishedAt": { "type": "string", "format": "date-time" } } }
+    }
+  },
+  "security": [{ "bearerAuth": [] }]
+}

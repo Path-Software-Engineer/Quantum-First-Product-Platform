@@ -21,6 +21,13 @@ import { PublishingService } from './publishing/publishing.service.js';
 import { PqcController, PublicPqcController } from './pqc/pqc.controller.js';
 import { PqcRepository } from './pqc/pqc.repository.js';
 import { PqcService } from './pqc/pqc.service.js';
+import {
+  DeveloperDocsController,
+  PublicDeveloperDocsController,
+} from './developer-docs/developer-docs.controller.js';
+import { DeveloperDocsRepository } from './developer-docs/developer-docs.repository.js';
+import { DeveloperDocsService } from './developer-docs/developer-docs.service.js';
+import { OutboxWorker } from './outbox/outbox.worker.js';
 
 @Module({
   imports: [],
@@ -32,6 +39,8 @@ import { PqcService } from './pqc/pqc.service.js';
     PublicOnePagerController,
     PqcController,
     PublicPqcController,
+    DeveloperDocsController,
+    PublicDeveloperDocsController,
   ],
   providers: [
     AppService,
@@ -47,6 +56,9 @@ import { PqcService } from './pqc/pqc.service.js';
     PublishingService,
     PqcRepository,
     PqcService,
+    DeveloperDocsRepository,
+    DeveloperDocsService,
+    OutboxWorker,
     { provide: APP_GUARD, useExisting: AuthGuard },
     { provide: APP_GUARD, useExisting: WorkspacePermissionGuard },
   ],

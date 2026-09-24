@@ -21,6 +21,6 @@ try {
     Invoke-Checked 'Playwright accessibility and responsive acceptance' { npm run test:e2e -w portal }
     Invoke-Checked 'Dependency security audit' { npm audit --audit-level=high }
     Invoke-Checked 'Git whitespace' { git diff --check }
-    Write-Host 'OK - Project 10 Sprint 2 quality gate passed'
+    Write-Host 'OK - Project 10 Sprint 3 quality gate passed'
 }
 finally { Pop-Location }

@@ -30,6 +30,7 @@ const config: Config = {
         { to: "/trust", label: "Trust and evidence", position: "left" },
         { to: "/one-pager", label: "Published one-pager", position: "left" },
         { to: "/pqc-report", label: "PQC report", position: "left" },
+        { to: "/developer-docs", label: "API docs", position: "left" },
       ],
     },
     footer: {

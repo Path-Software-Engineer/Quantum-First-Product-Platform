@@ -576,6 +576,160 @@ integration('PostgreSQL tenancy and RLS under the runtime role', () => {
     expect(hiddenFromOtherTenant.rows).toEqual([]);
   });
 
+  it('builds, publishes and enqueues reviewed developer documentation atomically', async () => {
+    const authorToken = await accessToken(orgA, 'synthetic-actor');
+    const reviewerToken = await accessToken(orgA, 'synthetic-reviewer');
+    const product = await request(app.getHttpServer())
+      .post(`/api/v1/workspaces/${workspaceA}/products`)
+      .set('Authorization', `Bearer ${authorToken}`)
+      .send({
+        slug: 'synthetic-developer-docs',
+        displayName: 'Synthetic Developer Docs',
+        summary: 'Integration fixture; not a production API.',
+      })
+      .expect(201);
+    const version = await request(app.getHttpServer())
+      .post(
+        `/api/v1/workspaces/${workspaceA}/products/${product.body.productId}/versions`,
+      )
+      .set('Authorization', `Bearer ${authorToken}`)
+      .send({ changeSummary: 'Synthetic Sprint 3 integration fixture.' })
+      .expect(201);
+    const created = await request(app.getHttpServer())
+      .post(
+        `/api/v1/workspaces/${workspaceA}/product-versions/${version.body.versionId}/developer-docs`,
+      )
+      .set('Authorization', `Bearer ${authorToken}`)
+      .send({
+        apiName: 'Synthetic Jobs',
+        apiVersion: 'v1',
+        description:
+          'A synthetic API contract used only for integration testing.',
+        authModel: 'Bearer token with workspace scope',
+        baseUrl: 'https://api.example.invalid',
+        rateLimits: 'Declared limit: 60 requests per minute',
+        serviceStatus: 'beta',
+      })
+      .expect(201);
+    const documentId = created.body.documentId;
+    await request(app.getHttpServer())
+      .post(
+        `/api/v1/workspaces/${workspaceA}/developer-docs/${documentId}/endpoints`,
+      )
+      .set('Authorization', `Bearer ${authorToken}`)
+      .send({
+        method: 'POST',
+        path: '/v1/jobs',
+        summary: 'Create a synthetic job',
+        description: 'Accepts one bounded synthetic work item.',
+        tags: ['jobs'],
+        useCase: 'Verify the documentation lifecycle.',
+        parameters: [{ name: 'Idempotency-Key', in: 'header', required: true }],
+        requestSchema: { type: 'object', required: ['name'] },
+        responseSchema: { type: 'object', required: ['jobId'] },
+      })
+      .expect(201);
+    await request(app.getHttpServer())
+      .post(
+        `/api/v1/workspaces/${workspaceA}/developer-docs/${documentId}/errors`,
+      )
+      .set('Authorization', `Bearer ${authorToken}`)
+      .send({
+        errorCode: 'INVALID_JOB',
+        httpStatus: 422,
+        message: 'The job payload is invalid.',
+        cause: 'A required field is absent.',
+        example: { code: 'INVALID_JOB' },
+        suggestedSolution: 'Add the required name field and retry.',
+        isCommon: true,
+      })
+      .expect(201);
+    for (const language of ['curl', 'python']) {
+      await request(app.getHttpServer())
+        .post(
+          `/api/v1/workspaces/${workspaceA}/developer-docs/${documentId}/examples`,
+        )
+        .set('Authorization', `Bearer ${authorToken}`)
+        .send({
+          language,
+          title: `${language} synthetic example`,
+          requestSample:
+            language === 'curl'
+              ? 'curl -X POST https://api.example.invalid/v1/jobs'
+              : 'requests.post("https://api.example.invalid/v1/jobs")',
+          responseSample: '{"jobId":"synthetic"}',
+          notes: 'Non-production hostname and response.',
+        })
+        .expect(201);
+    }
+    await request(app.getHttpServer())
+      .put(
+        `/api/v1/workspaces/${workspaceA}/developer-docs/${documentId}/quickstart`,
+      )
+      .set('Authorization', `Bearer ${authorToken}`)
+      .send({
+        installation: 'No SDK is required for the HTTP example.',
+        firstCall: 'curl https://api.example.invalid/health',
+        expectedResult: 'A synthetic HTTP 200 example.',
+        nextStep: 'Create one synthetic job.',
+        troubleshooting: 'Verify the placeholder token and base URL.',
+      })
+      .expect(200);
+    await request(app.getHttpServer())
+      .post(
+        `/api/v1/workspaces/${workspaceA}/developer-docs/${documentId}/review`,
+      )
+      .set('Authorization', `Bearer ${authorToken}`)
+      .send({ note: 'Self-review must fail.' })
+      .expect(409);
+    await request(app.getHttpServer())
+      .post(
+        `/api/v1/workspaces/${workspaceA}/developer-docs/${documentId}/review`,
+      )
+      .set('Authorization', `Bearer ${reviewerToken}`)
+      .send({ note: 'Contracts, examples, errors and limitations reviewed.' })
+      .expect(201);
+    const built = await request(app.getHttpServer())
+      .post(
+        `/api/v1/workspaces/${workspaceA}/developer-docs/${documentId}/builds`,
+      )
+      .set('Authorization', `Bearer ${reviewerToken}`)
+      .expect(201);
+    expect(built.body.sourceSha256).toMatch(/^[a-f0-9]{64}$/);
+    expect(built.body.markdown).toContain('### POST /v1/jobs');
+    expect(JSON.stringify(built.body.sourceSnapshot)).not.toContain(
+      'synthetic-reviewer',
+    );
+    await request(app.getHttpServer())
+      .post(
+        `/api/v1/workspaces/${workspaceA}/developer-doc-builds/${built.body.buildId}/publish`,
+      )
+      .set('Authorization', `Bearer ${reviewerToken}`)
+      .expect(201);
+    await request(app.getHttpServer())
+      .get(`/api/v1/public/developer-docs/${built.body.buildId}`)
+      .expect(200)
+      .expect(({ body }) =>
+        expect(body.sourceSnapshot.endpoints).toHaveLength(1),
+      );
+    const outbox = await asRuntime(orgA, (client) =>
+      client.query(
+        `SELECT event_type, payload FROM outbox_events WHERE aggregate_id=$1 ORDER BY created_at`,
+        [built.body.buildId],
+      ),
+    );
+    expect(outbox.rows.map((row) => row.event_type)).toEqual([
+      'developer_docs.built',
+      'developer_docs.published',
+    ]);
+    const hidden = await asRuntime(orgB, (client) =>
+      client.query('SELECT build_id FROM api_doc_builds WHERE build_id=$1', [
+        built.body.buildId,
+      ]),
+    );
+    expect(hidden.rows).toEqual([]);
+  });
+
   it('denies a valid actor attempting to enter another tenant workspace', async () => {
     const token = await accessToken(orgA, 'synthetic-actor');
     await request(app.getHttpServer())

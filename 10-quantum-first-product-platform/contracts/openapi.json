@@ -2,8 +2,8 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Quantum-First Product Platform Control API",
-    "version": "0.2.0",
-    "description": "Tenant-scoped product publishing and evidence-bounded PQC readiness report contract."
+    "version": "0.3.0",
+    "description": "Tenant-scoped product publishing, evidence-bounded PQC reports and reviewed developer API documentation."
   },
   "servers": [{ "url": "http://127.0.0.1:8080" }],
   "tags": [
@@ -12,6 +12,7 @@
     { "name": "Catalog" },
     { "name": "Publishing" },
     { "name": "PQC reports" },
+    { "name": "Developer docs" },
     { "name": "Public artifacts" }
   ],
   "paths": {
@@ -572,6 +573,41 @@
           "404": { "$ref": "#/components/responses/NotFound" }
         }
       }
+    },
+    "/api/v1/workspaces/{workspaceId}/product-versions/{versionId}/developer-docs": {
+      "post": {
+        "tags": ["Developer docs"], "operationId": "createDeveloperDocs",
+        "parameters": [{ "$ref": "#/components/parameters/WorkspaceId" }, { "$ref": "#/components/parameters/VersionId" }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateDeveloperDocs" } } } },
+        "responses": { "201": { "description": "Created draft API documentation project" }, "404": { "$ref": "#/components/responses/NotFound" } }
+      }
+    },
+    "/api/v1/workspaces/{workspaceId}/developer-docs/{documentId}": {
+      "get": { "tags": ["Developer docs"], "operationId": "getDeveloperDocs", "parameters": [{ "$ref": "#/components/parameters/WorkspaceId" }, { "$ref": "#/components/parameters/DocumentId" }], "responses": { "200": { "description": "Structured documentation project" }, "404": { "$ref": "#/components/responses/NotFound" } } }
+    },
+    "/api/v1/workspaces/{workspaceId}/developer-docs/{documentId}/endpoints": {
+      "post": { "tags": ["Developer docs"], "operationId": "createDocumentedEndpoint", "parameters": [{ "$ref": "#/components/parameters/WorkspaceId" }, { "$ref": "#/components/parameters/DocumentId" }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object" } } } }, "responses": { "201": { "description": "Created endpoint contract" }, "409": { "$ref": "#/components/responses/Conflict" } } }
+    },
+    "/api/v1/workspaces/{workspaceId}/developer-docs/{documentId}/errors": {
+      "post": { "tags": ["Developer docs"], "operationId": "createDocumentedError", "parameters": [{ "$ref": "#/components/parameters/WorkspaceId" }, { "$ref": "#/components/parameters/DocumentId" }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object" } } } }, "responses": { "201": { "description": "Created error documentation" }, "409": { "$ref": "#/components/responses/Conflict" } } }
+    },
+    "/api/v1/workspaces/{workspaceId}/developer-docs/{documentId}/examples": {
+      "post": { "tags": ["Developer docs"], "operationId": "createDeveloperExample", "parameters": [{ "$ref": "#/components/parameters/WorkspaceId" }, { "$ref": "#/components/parameters/DocumentId" }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object" } } } }, "responses": { "201": { "description": "Created copy-ready example" }, "409": { "$ref": "#/components/responses/Conflict" } } }
+    },
+    "/api/v1/workspaces/{workspaceId}/developer-docs/{documentId}/quickstart": {
+      "put": { "tags": ["Developer docs"], "operationId": "setDeveloperQuickstart", "parameters": [{ "$ref": "#/components/parameters/WorkspaceId" }, { "$ref": "#/components/parameters/DocumentId" }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object" } } } }, "responses": { "200": { "description": "Upserted quickstart" }, "409": { "$ref": "#/components/responses/Conflict" } } }
+    },
+    "/api/v1/workspaces/{workspaceId}/developer-docs/{documentId}/review": {
+      "post": { "tags": ["Developer docs"], "operationId": "reviewDeveloperDocs", "parameters": [{ "$ref": "#/components/parameters/WorkspaceId" }, { "$ref": "#/components/parameters/DocumentId" }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["note"], "properties": { "note": { "type": "string" } } } } } }, "responses": { "201": { "description": "Independent review recorded" }, "409": { "$ref": "#/components/responses/Conflict" } } }
+    },
+    "/api/v1/workspaces/{workspaceId}/developer-docs/{documentId}/builds": {
+      "post": { "tags": ["Developer docs"], "operationId": "buildDeveloperDocs", "parameters": [{ "$ref": "#/components/parameters/WorkspaceId" }, { "$ref": "#/components/parameters/DocumentId" }], "responses": { "201": { "description": "Immutable Markdown build with SHA-256" }, "409": { "$ref": "#/components/responses/Conflict" } } }
+    },
+    "/api/v1/workspaces/{workspaceId}/developer-doc-builds/{buildId}/publish": {
+      "post": { "tags": ["Developer docs"], "operationId": "publishDeveloperDocs", "parameters": [{ "$ref": "#/components/parameters/WorkspaceId" }, { "$ref": "#/components/parameters/BuildId" }], "responses": { "201": { "description": "Published reviewed documentation projection and queued outbox event" }, "409": { "$ref": "#/components/responses/Conflict" } } }
+    },
+    "/api/v1/public/developer-docs/{buildId}": {
+      "get": { "tags": ["Public artifacts"], "operationId": "getPublishedDeveloperDocs", "security": [], "parameters": [{ "$ref": "#/components/parameters/BuildId" }], "responses": { "200": { "description": "Published Markdown and structured developer documentation" }, "404": { "$ref": "#/components/responses/NotFound" } } }
     }
   },
   "components": {
@@ -617,6 +653,10 @@
         "name": "assessmentId",
         "in": "path",
         "required": true,
+        "schema": { "$ref": "#/components/schemas/Uuid" }
+      },
+      "DocumentId": {
+        "name": "documentId", "in": "path", "required": true,
         "schema": { "$ref": "#/components/schemas/Uuid" }
       }
     },
@@ -834,6 +874,16 @@
               "technical_observation"
             ]
           }
+        }
+      },
+      "CreateDeveloperDocs": {
+        "type": "object", "additionalProperties": false,
+        "required": ["apiName", "apiVersion", "description", "authModel", "baseUrl", "rateLimits", "serviceStatus"],
+        "properties": {
+          "apiName": { "type": "string" }, "apiVersion": { "type": "string" },
+          "description": { "type": "string" }, "authModel": { "type": "string" },
+          "baseUrl": { "type": "string", "format": "uri" }, "rateLimits": { "type": "string" },
+          "serviceStatus": { "type": "string", "enum": ["concept", "beta", "stable", "deprecated"] }
         }
       },
       "CreateCryptoInventoryItem": {

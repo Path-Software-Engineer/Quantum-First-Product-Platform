@@ -4,7 +4,7 @@ import type * as Preset from "@docusaurus/preset-classic";
 const config: Config = {
   title: "Quantum-First Product Platform",
   tagline: "Evidence before claims. Product before hype.",
-  url: "http://127.0.0.1:3000",
+  url: process.env.P10_PUBLIC_SITE_URL ?? "http://127.0.0.1:3000",
   baseUrl: "/",
   customFields: {
     apiBaseUrl: process.env.P10_PUBLIC_API_URL ?? "http://127.0.0.1:8080",
@@ -35,7 +35,7 @@ const config: Config = {
     },
     footer: {
       style: "dark",
-      copyright: `© ${new Date().getFullYear()} Quantum-First Product Platform. Local development preview; no customer claims.`,
+      copyright: `© ${new Date().getFullYear()} Quantum-First Product Platform. Synthetic recruiter demo; no customer claims.`,
     },
   },
 };

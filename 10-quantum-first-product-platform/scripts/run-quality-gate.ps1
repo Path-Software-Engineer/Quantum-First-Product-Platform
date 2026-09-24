@@ -18,8 +18,9 @@ try {
     Write-Host '  -> Disposable PostgreSQL tenant isolation tests'
     & (Join-Path $PSScriptRoot 'run-tenancy-integration.ps1')
     Invoke-Checked 'Docusaurus production build' { npm run build -w portal }
+    Invoke-Checked 'Playwright accessibility and responsive acceptance' { npm run test:e2e -w portal }
     Invoke-Checked 'Dependency security audit' { npm audit --audit-level=high }
     Invoke-Checked 'Git whitespace' { git diff --check }
-    Write-Host 'OK - Project 10 local bootstrap quality gate passed'
+    Write-Host 'OK - Project 10 Sprint 1 quality gate passed'
 }
 finally { Pop-Location }

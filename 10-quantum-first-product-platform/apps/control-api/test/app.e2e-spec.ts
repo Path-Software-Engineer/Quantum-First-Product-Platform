@@ -5,6 +5,7 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { MembershipRepository } from '../src/auth/membership.repository.js';
 import { CatalogRepository } from '../src/catalog/catalog.repository.js';
+import { configureOpenApi } from '../src/openapi/openapi.js';
 import { PublishingRepository } from '../src/publishing/publishing.repository.js';
 import { AppModule } from './../src/app.module.js';
 
@@ -74,6 +75,7 @@ describe('AppController (e2e)', () => {
       .compile();
 
     app = moduleFixture.createNestApplication();
+    await configureOpenApi(app);
     await app.init();
   });
 
@@ -97,6 +99,24 @@ describe('AppController (e2e)', () => {
 
   it('/health/ready refuses to claim readiness without PostgreSQL', () => {
     return request(app.getHttpServer()).get('/health/ready').expect(503);
+  });
+
+  it('/openapi.json exposes the versioned public API contract', () => {
+    return request(app.getHttpServer())
+      .get('/openapi.json')
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body.openapi).toBe('3.0.3');
+        expect(body.paths['/api/v1/public/one-pagers/{buildId}']).toBeDefined();
+      });
+  });
+
+  it('/docs serves an interactive Swagger UI', () => {
+    return request(app.getHttpServer())
+      .get('/docs/')
+      .expect(200)
+      .expect('Content-Type', /html/)
+      .expect(({ text }) => expect(text).toContain('id="swagger-ui"'));
   });
 
   it('/api/v1/workspaces/:id/access denies a missing bearer token', () => {

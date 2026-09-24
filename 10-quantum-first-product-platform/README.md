@@ -1,17 +1,18 @@
 # 10-quantum-first-product-platform
 
-> **Estado de implementación (2026-09-18):** Sprint 1 iniciado en la rama
+> **Estado de implementación (2026-09-24):** Sprint 1 completo en la rama
 > `feature/s1-d1548-quantum-first-product-exploration`. El [Mapa Actual del
 > Proyecto 10](docs/exploration.md) manda sobre el plan histórico que sigue
 > debajo: exige Docusaurus, NestJS, PostgreSQL, aislamiento multi-tenant,
 > revisión de claims y un one-pager generado. La exploración y los ADR están
 > documentados. El portal/API, tenancy, identidad/RBAC, catálogo versionado,
 > claims con revisión separada, escenarios comerciales hipotéticos y el
-> one-pager derivado con SHA-256 están implementados. El recorrido completo
+> one-pager derivado con SHA-256 y Swagger/OpenAPI están implementados. El recorrido completo
 > JWT → RBAC → RLS → catálogo → revisión independiente → publicación pasó 11
-> pruebas contra PostgreSQL 17.10 desechable. El Sprint 1 todavía no está
-> cerrado ni etiquetado porque la auditoría de dependencias estable de
-> Docusaurus mantiene 1 hallazgo alto y 20 moderados (ver
+> pruebas contra PostgreSQL 17.10 desechable. La aceptación de navegador cubre
+> escritorio y móvil con axe, estados vacío/publicado/error y contenido de
+> prueba explícitamente sintético. La auditoría registra 0 vulnerabilidades con
+> un pin de seguridad documentado de Docusaurus (ver
 > [riesgos](docs/dependency-risk.md)). El
 > handoff de AI Project 55 sigue pendiente de aprobación humana y no se ha
 > importado. El Sprint 2 no está abierto.
@@ -23,9 +24,9 @@ Set-Location "C:\JeanLoa\Path-Software-Engineer\Quantum-First-Product-Platform\1
 .\scripts\run-quality-gate.ps1
 ```
 
-El gate es deliberadamente estricto y se detendrá en `npm audit` mientras
-persistan los hallazgos registrados; los checks anteriores no convierten el
-Sprint 1 en release.
+Si Chromium de Playwright aún no está instalado, ejecute primero
+`.\scripts\setup.ps1`. El gate es deliberadamente estricto y valida también el
+navegador real, accesibilidad, PostgreSQL desechable y auditoría de dependencias.
 
 Contrato del vertical slice: [catálogo y publicación](docs/catalog-publishing.md).
 

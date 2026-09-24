@@ -1,6 +1,6 @@
 {
   "name": "control-api",
-  "version": "0.1.0-dev",
+  "version": "0.1.0",
   "description": "",
   "author": "",
   "private": true,
@@ -25,12 +25,14 @@
     "@nestjs/common": "12.0.3",
     "@nestjs/core": "12.0.3",
     "@nestjs/platform-express": "12.0.3",
+    "@nestjs/swagger": "12.0.2",
     "jose": "6.2.12",
     "pg": "8.23.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
   },
   "devDependencies": {
+    "@apidevtools/swagger-parser": "13.1.0",
     "@nestjs/cli": "12.0.3",
     "@nestjs/schematics": "12.0.3",
     "@nestjs/testing": "12.0.3",

@@ -29,17 +29,24 @@ describe('versioned OpenAPI contract', () => {
       [
         'approveProductVersion',
         'buildOnePager',
+        'buildPqcReport',
         'createCapability',
         'createClaim',
         'createCommercialScenario',
         'createEvidence',
         'createProduct',
         'createProductVersion',
+        'createPqcAssessment',
+        'createCryptoInventoryItem',
+        'createPqcRecommendation',
+        'createPqcRoadmapPhase',
         'createUseCase',
         'getLiveness',
         'getPrivateOnePagerBuild',
         'getProduct',
         'getPublishedOnePager',
+        'getPublishedPqcReport',
+        'getPqcAssessment',
         'getReadiness',
         'getWorkspaceAccess',
         'listAuditEvents',
@@ -48,7 +55,9 @@ describe('versioned OpenAPI contract', () => {
         'listProducts',
         'listUseCases',
         'publishProductVersion',
+        'publishPqcReport',
         'reviewClaim',
+        'reviewPqcAssessment',
         'submitProductVersion',
       ].sort(),
     );
@@ -73,6 +82,7 @@ describe('versioned OpenAPI contract', () => {
     );
     expect(anonymous.sort()).toEqual([
       '/api/v1/public/one-pagers/{buildId}',
+      '/api/v1/public/pqc-reports/{buildId}',
       '/health/live',
       '/health/ready',
     ]);

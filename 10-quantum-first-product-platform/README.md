@@ -1,7 +1,7 @@
 # 10-quantum-first-product-platform
 
-> **Estado de implementación (2026-09-24):** Sprint 1 completo en la rama
-> `feature/s1-d1548-quantum-first-product-exploration`. El [Mapa Actual del
+> **Estado de implementación (2026-09-24):** Sprint 2 implementado en la rama
+> `feature/s2-pqc-product-report`. El [Mapa Actual del
 > Proyecto 10](docs/exploration.md) manda sobre el plan histórico que sigue
 > debajo: exige Docusaurus, NestJS, PostgreSQL, aislamiento multi-tenant,
 > revisión de claims y un one-pager generado. La exploración y los ADR están
@@ -15,7 +15,10 @@
 > un pin de seguridad documentado de Docusaurus (ver
 > [riesgos](docs/dependency-risk.md)). El
 > handoff de AI Project 55 sigue pendiente de aprobación humana y no se ha
-> importado. El Sprint 2 no está abierto.
+> importado. Sprint 2 agrega assessments PQC tenant-scoped, inventario
+> RSA/ECC declarado, scoring explicable, revisión independiente, reporte
+> inmutable y visor público accesible; no ejecuta auditorías ni certifica
+> seguridad post-cuántica.
 
 Verificación local del trabajo disponible:
 

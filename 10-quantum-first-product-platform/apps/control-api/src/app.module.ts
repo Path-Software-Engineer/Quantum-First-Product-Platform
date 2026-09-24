@@ -18,6 +18,9 @@ import {
 } from './publishing/publishing.controller.js';
 import { PublishingRepository } from './publishing/publishing.repository.js';
 import { PublishingService } from './publishing/publishing.service.js';
+import { PqcController, PublicPqcController } from './pqc/pqc.controller.js';
+import { PqcRepository } from './pqc/pqc.repository.js';
+import { PqcService } from './pqc/pqc.service.js';
 
 @Module({
   imports: [],
@@ -27,6 +30,8 @@ import { PublishingService } from './publishing/publishing.service.js';
     CatalogController,
     PublishingController,
     PublicOnePagerController,
+    PqcController,
+    PublicPqcController,
   ],
   providers: [
     AppService,
@@ -40,6 +45,8 @@ import { PublishingService } from './publishing/publishing.service.js';
     CatalogService,
     PublishingRepository,
     PublishingService,
+    PqcRepository,
+    PqcService,
     { provide: APP_GUARD, useExisting: AuthGuard },
     { provide: APP_GUARD, useExisting: WorkspacePermissionGuard },
   ],
